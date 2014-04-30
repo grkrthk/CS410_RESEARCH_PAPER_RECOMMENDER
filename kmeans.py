@@ -62,12 +62,28 @@ if len(args) > 0:
 ###############################################################################
 # Load some categories from the training set
 categories = [
-    'distributed.hadoop.cloud.computing',
-    'map.reduce.operating.systems',
-    'memory.deduplication.file.storage',
-    'parallel.architecture.performance.latency.analysis.bandwidth',
-    'network.sdn.SDN.protocols.IP.packet.software.application.heap.java'
+    'file.system.storage.cache.IO.io.memory.ssd.flash.kernel.deduplication.algorithms', # fast
+    'file.system.storage.cache.IO.io.memory.ssd.flash.kernel.deduplication.algorithms', # hotstorage
+    'distributed.systems.hadoop.map.reduce.peerp.p2p.cloud.stream.scheduling.operating.kernel.system.network', #lisa
+    'distributed.systems.hadoop.map.reduce.peerp.p2p.cloud.stream.scheduling.operating.kernel.system.network', #nsdi
+    'distributed.systems.hadoop.map.reduce.peerp.p2p.cloud.stream.scheduling.operating.kernel.system.network', #osdi
+    'distributed.systems.hadoop.map.reduce.peerp.p2p.cloud.stream.scheduling.operating.kernel.system.network', #sacan
+    'network.sdn.SDN.protocols.IP.packet.router.topology.flow.openflow.flow', #sigcomm
+    'distributed.systems.hadoop.map.reduce.peerp.p2p.cloud.stream.scheduling.operating.kernel.system', #sosp
+    'file.system.storage.cache.IO.io.memory.ssd.flash.kernel.deduplication.distributed.systems.hadoop.map.reduce.peerp.p2p.cloud.stream.scheduling.operating.kernel.system.network.network.sdn.SDN.protocols.IP.packet.router.topology.flow.openflow' #usenix
 ]
+
+
+#drwxrwxr-x 2 grk grk  4096 Apr 30 15:18 fast
+#drwxrwxr-x 2 grk grk  4096 Apr 30 15:18 hotstorage
+#drwxrwxr-x 2 grk grk  4096 Apr 30 15:18 lisa
+#drwxrwxr-x 2 grk grk  4096 Apr 30 15:18 nsdi
+#drwxrwxr-x 2 grk grk  4096 Apr 30 15:18 osdi
+#drwxrwxr-x 2 grk grk  4096 Apr 30 15:18 sacan
+#drwxrwxr-x 2 grk grk 36864 Apr 30 15:18 sigcomm
+#drwxrwxr-x 2 grk grk  4096 Apr 30 15:18 sosp
+#drwxrwxr-x 2 grk grk  4096 Apr 30 15:18 usenix
+
 # Uncomment the following to do the analysis on all the categories
 #categories = None
 
@@ -105,7 +121,7 @@ if opts.use_hashing:
                                        non_negative=False, norm='l2',
                                        binary=False)
 else:
-    vectorizer = TfidfVectorizer(max_df=0.5, max_features=opts.n_features,
+    vectorizer = TfidfVectorizer(max_df=0.9, max_features=opts.n_features,
                                  stop_words='english', use_idf=opts.use_idf)
 
 #print(vectorizer.get_feature_names())
@@ -179,15 +195,20 @@ for key, value in clusters.iteritems() :
            print("\n")
            make_dir_path = "/home/grk/cs410_project/clustered_results" + "/cluster" + str(i)
            dir_path = make_dir_path + "/cluster_folder"
+                                     
            try:
                           os.makedirs(make_dir_path)                                         
                           os.makedirs(dir_path)
            except OSError:
                           pass
 
-           for path in value:
-                         
+           for path in value:                          
                           shutil.copy(path, dir_path)
+                          with open(path, "r") as myfile:
+                                  lines = myfile.readlines()				  
+                                  last_line = lines[-1]
+                                  with open(dir_path + "/" + "unique_ids.txt", "a") as myfile:
+                                                   myfile.write(last_line)
                      
            i = i+1
 
@@ -196,6 +217,7 @@ count_clusters = dict()
 for key, value in clusters.iteritems() :
            print("key: %d, total: %d" %(key, len(value)))
            sum1 = sum1 + len(value)
+           count_clusters[key] = len(value)
   
 print("total docs: %d" %(sum1))
 
@@ -213,8 +235,27 @@ path = "/home/grk/cs410_project/clustered_results/cluster"
 
 for i in range(0, km.n_clusters):
              new_path = path + str(i)
-             command = "python" + " topic_extraction.py" + " " + new_path
+             command = "python" + " topic_extraction.py" + " " + new_path + "/ " + str(count_clusters[i])
+             print(command)
              os.system(command)
 
 
+resultant_path = "/home/grk/cs410_project/resultant.txt"
+with open(resultant_path, "a") as resfile:
+  
+       for i in range(0, km.n_clusters):
+       		      unique_file_id_path = path + str(i) + "/" + "cluster_folder/" + "unique_ids.txt"
+	              topic_keywords_path = path + str(i) + "/" + "cluster_folder/" + "topic_keywords.txt"
+                      topicfile = open(topic_keywords_path, "r") 
+	              keywords_buf = topicfile.readlines()         
+              
+                      uniqueidfile = open(unique_file_id_path, "r")
+        	      uniqueidlines = uniqueidfile.readlines()
+                     
+                      for line in uniqueidfile:
+                                     line = line + ":" + keywords_buf
+                                     resfile.write(line + "\n")
+
+                                     
+                                 
              

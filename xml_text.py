@@ -3,6 +3,19 @@ import os
 import chardet
 #from django.utils.encoding import smart_str
 
+
+def getConferenceName(sourceName, itemID):
+	if sourceName == "usenix":
+                    conferences = ['nsdi', 'osdi', 'fast','hotstorage','lisa']
+                    for conference in conferences:
+                                  if conference in itemID:
+                                            return conference
+ 
+        return sourceName
+
+
+
+
 def extractTextFromElement(elementName, buf):
     tree = ET.fromstring(buf)
     for child in tree:
@@ -18,7 +31,9 @@ for subdir, dirs, files in os.walk(rootdir):
         	buf = ""
 	        buf += open(filename, 'rU').read()
                 #extract the conference name
+                item_id = extractTextFromElement('item_id', buf)
 	        conference_name = extractTextFromElement('source_name', buf)
+                conference_name = getConferenceName(conference_name, item_id)
                 #create the path
                 if(conference_name):
                         path = "/home/grk/cs410_project/parsed_text/" + conference_name
@@ -38,8 +53,15 @@ for subdir, dirs, files in os.walk(rootdir):
                         #encoding = chardet.detect(content)                   
                         if content:
                             print >> fptr, content.encode('ascii', 'ignore')
+                            item_id = extractTextFromElement('item_id', buf)
+                            print >> fptr, "\n",item_id
                         #print >> fptr, smart_str(content)
                         #print content
+                        
+                        #with open(path + "/" + "paper_names.txt", "a") as myfile:
+                        #          item_id = extractTextFromElement('item_id', buf)
+                        #          myfile.write(item_id + ":\n")
+
                         fptr.close()                           
                         
                                                                 
